@@ -39,6 +39,9 @@ data_wide = data_wide.rename(columns={carbon_col[0]: 'carbon_emissions'})
 # Drop rows where target variable is null
 data_cleaned = data_wide.dropna(subset=['carbon_emissions'])
 
+# drop all null values in the dataset
+data_cleaned = data_cleaned.dropna()
+
 print(data_cleaned.head())
 print(data_cleaned.shape)
 

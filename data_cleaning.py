@@ -50,10 +50,17 @@ print(data_cleaned.shape)
 X = data_cleaned.drop(columns=['carbon_emissions'])
 y = data_cleaned['carbon_emissions']
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# First split off test set
+X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Save all four splits
+# Then split remaining into train and validation
+X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, random_state=42)
+# 0.25 of 0.80 = 0.20 of total
+
+# Save all splits
 X_train.to_csv('X_train.csv', index=False)
+X_val.to_csv('X_val.csv', index=False)
 X_test.to_csv('X_test.csv', index=False)
 y_train.to_csv('y_train.csv', index=False)
+y_val.to_csv('y_val.csv', index=False)
 y_test.to_csv('y_test.csv', index=False)

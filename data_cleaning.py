@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import train_test_split
 
 data = pd.read_csv('data.csv')
 
@@ -45,5 +46,14 @@ data_cleaned = data_cleaned.dropna()
 print(data_cleaned.head())
 print(data_cleaned.shape)
 
-# Save the cleaned data to a new CSV file
-data_cleaned.to_csv('data_cleaned.csv', index=False)
+
+X = data_cleaned.drop(columns=['carbon_emissions'])
+y = data_cleaned['carbon_emissions']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Save all four splits
+X_train.to_csv('X_train.csv', index=False)
+X_test.to_csv('X_test.csv', index=False)
+y_train.to_csv('y_train.csv', index=False)
+y_test.to_csv('y_test.csv', index=False)

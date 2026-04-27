@@ -38,7 +38,7 @@ print(k_results_df.to_string(index=False))
 
 # train final model with best k
 knn = KNeighborsRegressor(n_neighbors=best_k)
-knn.fit(X_train_scaled, y_train)
+knn.fit(X_train_scaled, y_train.values.ravel())
 
 # evaluate on validation set
 y_val_pred = knn.predict(X_val_scaled)
@@ -53,3 +53,15 @@ print(f'KNN Regressor Test Set Performance:')
 print(f'RMSE: {np.sqrt(mean_squared_error(y_test, y_test_pred)):.4f}')
 print(f'MAE: {mean_absolute_error(y_test, y_test_pred):.4f}')
 print(f'R^2: {r2_score(y_test, y_test_pred):.4f}')
+
+
+# RESULTS
+
+# KNN Regressor Validation Set Performance:
+# RMSE: 780.5904
+# MAE: 233.1007
+# R^2: 0.4994
+# KNN Regressor Test Set Performance:
+# RMSE: 272.1808
+# MAE: 125.5420
+# R^2: 0.4940

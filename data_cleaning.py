@@ -37,6 +37,14 @@ carbon_col = [col for col in data_wide.columns if 'carbon' in col.lower() or 'CO
 print("Carbon column found:", carbon_col)  # verify before renaming
 data_wide = data_wide.rename(columns={carbon_col[0]: 'carbon_emissions'})
 
+cols_to_drop = [
+    'GDP (current LCU)',
+    'Access to electricity, rural (% of rural population)',
+    'Electricity production from oil, gas and coal sources (% of total)',
+    'Urban population (% of total population)',
+]
+data_wide = data_wide.drop(columns=cols_to_drop)
+
 # Drop rows where target variable is null
 data_cleaned = data_wide.dropna(subset=['carbon_emissions'])
 
@@ -46,16 +54,26 @@ data_cleaned = data_cleaned.dropna()
 print(data_cleaned.head())
 print(data_cleaned.shape)
 
+# Split by country so no country appears in more than one split
+countries = data_cleaned['Country Name'].unique()
+train_countries, temp_countries = train_test_split(countries, test_size=0.4, random_state=42)
+val_countries, test_countries = train_test_split(temp_countries, test_size=0.5, random_state=42)
 
-X = data_cleaned.drop(columns=['carbon_emissions'])
-y = data_cleaned['carbon_emissions']
+train_data = data_cleaned[data_cleaned['Country Name'].isin(train_countries)]
+val_data = data_cleaned[data_cleaned['Country Name'].isin(val_countries)]
+test_data = data_cleaned[data_cleaned['Country Name'].isin(test_countries)]
 
-# First split off test set
-X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train = train_data.drop(columns=['carbon_emissions'])
+y_train = train_data['carbon_emissions']
+X_val = val_data.drop(columns=['carbon_emissions'])
+y_val = val_data['carbon_emissions']
+X_test = test_data.drop(columns=['carbon_emissions'])
+y_test = test_data['carbon_emissions']
 
-# Then split remaining into train and validation
-X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, random_state=42)
-# 0.25 of 0.80 = 0.20 of total
+print(f"Train: {len(train_countries)} countries, {len(train_data)} rows")
+print(f"Val:   {len(val_countries)} countries, {len(val_data)} rows")
+print(f"Test:  {len(test_countries)} countries, {len(test_data)} rows")
+print(data_wide.columns.tolist())
 
 # Save all splits
 X_train.to_csv('X_train.csv', index=False)

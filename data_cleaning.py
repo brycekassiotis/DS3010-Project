@@ -54,6 +54,9 @@ data_cleaned = data_cleaned.dropna()
 print(data_cleaned.head())
 print(data_cleaned.shape)
 
+# make extra set for later reference
+data_cleaned.to_csv('pre_split.csv', index=False)
+
 # Split by country so no country appears in more than one split
 countries = data_cleaned['Country Name'].unique()
 train_countries, temp_countries = train_test_split(countries, test_size=0.4, random_state=42)

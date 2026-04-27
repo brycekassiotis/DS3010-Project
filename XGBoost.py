@@ -60,27 +60,25 @@ print(importance_df.to_string(index=False))
 # RESULTS
 
 # === Validation Performance ===
-# RMSE: 61.8699
-# MAE:  43.6228
-# R²:   0.7702
+# RMSE: 1.4660
+# MAE:  1.0537
+# R²:   0.9489
 
 # === Test Performance ===
-# RMSE: 1549.7768
-# MAE:  558.2240
-# R²:   -0.9033
+# RMSE: 0.9938
+# MAE:  0.5773
+# R²:   0.9431
 
 # === Feature Importances ===
-#                                                        Feature  Importance
-#                                               Urban population    0.483446
-#             Net trade in goods and services (BoP, current US$)    0.141509
-#     Agriculture, forestry, and fishing, value added (% of GDP)    0.126458
-#                                             GDP (constant LCU)    0.090617
-#       Electricity production from nuclear sources (% of total)    0.049572
-#          Electricity production from coal sources (% of total)    0.037180
-#                        Access to electricity (% of population)    0.017689
-#                    Electric power consumption (kWh per capita)    0.016340
-# Electricity production from hydroelectric sources (% of total)    0.011222
-#                    Fossil fuel energy consumption (% of total)    0.010473
-#                          Energy imports, net (% of energy use)    0.008613
-#   Electricity production from natural gas sources (% of total)    0.006880
-# PS C:\Users\bryce_8eiabba\DS3010-Project> 
+#                                                            Feature  Importance
+#                        Electric power consumption (kWh per capita)    0.319712
+#       Electricity production from natural gas sources (% of total)    0.146261
+#         Agriculture, forestry, and fishing, value added (% of GDP)    0.118649
+#          Industry (including construction), value added (% of GDP)    0.116413
+#                              Energy imports, net (% of energy use)    0.079632
+# Renewable energy consumption (% of total final energy consumption)    0.078530
+#           Electricity production from nuclear sources (% of total)    0.052556
+#                           Urban population (% of total population)    0.028094
+#     Electricity production from hydroelectric sources (% of total)    0.022090
+#                                                   Trade (% of GDP)    0.019814
+#                        Fossil fuel energy consumption (% of total)    0.018247

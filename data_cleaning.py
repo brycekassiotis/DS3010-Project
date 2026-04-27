@@ -4,7 +4,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
 data = pd.read_csv('updated_data.csv')
-data = pd.read_csv('updated_data.csv')
 print(data['Series Name'].unique())
 
 # Identify the year columns (they start with a 4-digit year)
@@ -12,7 +11,7 @@ year_cols = [col for col in data.columns if col[:4].isdigit()]
 
 # Melt year columns into rows
 data_melted = data.melt(
-    id_vars=['Country Name', 'Series Name'],
+    id_vars=['Country Name', 'Country Code', 'Series Name', 'Series Code'],
     value_vars=year_cols,
     var_name='Year',
     value_name='Value'

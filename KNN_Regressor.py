@@ -58,10 +58,10 @@ print(f'R^2: {r2_score(y_test, y_test_pred):.4f}')
 # RESULTS
 
 # KNN Regressor Validation Set Performance:
-# RMSE: 780.5904
-# MAE: 233.1007
-# R^2: 0.4994
+# RMSE: 2.8113
+# MAE: 2.0451
+# R^2: 0.8121
 # KNN Regressor Test Set Performance:
-# RMSE: 272.1808
-# MAE: 125.5420
-# R^2: 0.4940
+# RMSE: 2.4821
+# MAE: 1.4257
+# R^2: 0.6452

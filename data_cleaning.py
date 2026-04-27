@@ -3,7 +3,9 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
-data = pd.read_csv('data.csv')
+data = pd.read_csv('updated_data.csv')
+data = pd.read_csv('updated_data.csv')
+print(data['Series Name'].unique())
 
 # Identify the year columns (they start with a 4-digit year)
 year_cols = [col for col in data.columns if col[:4].isdigit()]
@@ -39,10 +41,7 @@ print("Carbon column found:", carbon_col)
 data_wide = data_wide.rename(columns={carbon_col[0]: 'carbon_emissions'})
 
 cols_to_drop = [
-    'GDP (current LCU)',
-    'Access to electricity, rural (% of rural population)',
-    'Electricity production from oil, gas and coal sources (% of total)',
-    'Urban population (% of total population)',
+    'GDP per capita (current US$)',
 ]
 data_wide = data_wide.drop(columns=cols_to_drop)
 

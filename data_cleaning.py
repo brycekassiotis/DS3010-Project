@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
 
 data = pd.read_csv('data.csv')
 
@@ -32,9 +33,9 @@ data_wide = data_melted.pivot_table(
 ).reset_index()
 data_wide.columns.name = None
 
-# Rename carbon emissions column for convenience (adjust to exact name in your data)
+# Rename carbon emissions column for convenience
 carbon_col = [col for col in data_wide.columns if 'carbon' in col.lower() or 'CO2' in col or 'emission' in col.lower()]
-print("Carbon column found:", carbon_col)  # verify before renaming
+print("Carbon column found:", carbon_col)
 data_wide = data_wide.rename(columns={carbon_col[0]: 'carbon_emissions'})
 
 cols_to_drop = [
@@ -54,7 +55,7 @@ data_cleaned = data_cleaned.dropna()
 print(data_cleaned.head())
 print(data_cleaned.shape)
 
-# make extra set for later reference
+# save full cleaned dataset for later reference
 data_cleaned.to_csv('pre_split.csv', index=False)
 
 # Split by country so no country appears in more than one split
@@ -76,7 +77,6 @@ y_test = test_data['carbon_emissions']
 print(f"Train: {len(train_countries)} countries, {len(train_data)} rows")
 print(f"Val:   {len(val_countries)} countries, {len(val_data)} rows")
 print(f"Test:  {len(test_countries)} countries, {len(test_data)} rows")
-print(data_wide.columns.tolist())
 
 # Save all splits
 X_train.to_csv('X_train.csv', index=False)

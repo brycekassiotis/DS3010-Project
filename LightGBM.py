@@ -61,22 +61,22 @@ print(importances)
 
 # RESULTS
 
-# Validation MSE: 652209.6857
-# Validation MAE: 209.7356
-# Validation R^2: 0.4642
-# Test MSE: 43535.0095
-# Test MAE: 95.7107
-# Test R^2: 0.7027
+# Validation MSE: 6912.9502
+# Validation MAE: 49.0517
+# Validation R^2: 0.5851
+# Test MSE: 464101.5634
+# Test MAE: 249.8428
+# Test R^2: 0.6322
 #                                               feature  importance
-# 11                                   Urban population         559
-# 3   Electricity production from coal sources __ of...         157
-# 10  Net trade in goods and services _BoP_ current ...         123
-# 2         Electric power consumption _kWh per capita_          97
-# 0             Access to electricity __ of population_          82
-# 7               Energy imports_ net __ of energy use_          59
-# 9                                  GDP _constant LCU_          57
-# 8         Fossil fuel energy consumption __ of total_          45
+# 11                                   Urban population         462
+# 3   Electricity production from coal sources __ of...         225
+# 9                                  GDP _constant LCU_         139
+# 10  Net trade in goods and services _BoP_ current ...         129
+# 2         Electric power consumption _kWh per capita_         114
+# 8         Fossil fuel energy consumption __ of total_          72
+# 0             Access to electricity __ of population_          62
 # 1   Agriculture_ forestry_ and fishing_ value adde...          43
-# 5   Electricity production from natural gas source...          42
-# 4   Electricity production from hydroelectric sour...          22
-# 6   Electricity production from nuclear sources __...          18
+# 7               Energy imports_ net __ of energy use_          41
+# 5   Electricity production from natural gas source...          29
+# 6   Electricity production from nuclear sources __...          25
+# 4   Electricity production from hydroelectric sour...          24

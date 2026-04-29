@@ -378,10 +378,6 @@ st.markdown(
         padding-right: 2rem;
         max-width: 100%;
     }
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #08101e 0%, #0b1220 100%);
-        border-right: 1px solid rgba(148, 163, 184, 0.12);
-    }
     [data-testid="stHeader"] {
         background: rgba(0, 0, 0, 0);
     }
@@ -479,6 +475,19 @@ st.markdown(
         letter-spacing: 0.08em;
         margin-bottom: 0.35rem;
     }
+    .slider-label-row {
+        display: flex;
+        align-items: center;
+        color: #f8fafc;
+        font-size: 0.98rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    .predict-controls-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
     .stTabs [data-baseweb="tab-list"] {
         gap: 1rem;
         margin-top: 0.1rem;
@@ -517,16 +526,30 @@ st.markdown(
     .stSlider div[data-testid="stWidgetLabel"] *,
     .stSlider div[data-testid="stWidgetLabel"],
     div[data-testid="stWidgetLabel"] label,
-    div[data-testid="stWidgetLabel"] p,
-    section[data-testid="stSidebar"] div[data-testid="stWidgetLabel"] *,
-    section[data-testid="stSidebar"] div[data-testid="stWidgetLabel"] {
-        color: #7dd3fc !important;
+    div[data-testid="stWidgetLabel"] p {
+        color: #f8fafc !important;
     }
     .stSlider [data-testid="stSliderValue"],
     .stSlider [data-testid="stSliderValue"] *,
     .stSlider div[data-baseweb="slider"] + div,
     .stSlider div[data-baseweb="slider"] + div * {
-        color: #38bdf8 !important;
+        color: #f8fafc !important;
+        fill: #f8fafc !important;
+        -webkit-text-fill-color: #f8fafc !important;
+    }
+    .stSlider [data-baseweb="slider"] * {
+        color: #f8fafc !important;
+        fill: #f8fafc !important;
+    }
+    .stSlider [data-baseweb="input"] input,
+    .stSlider [data-baseweb="input"] input::placeholder,
+    .stSlider [data-baseweb="input"] div,
+    .stSlider [data-baseweb="input"] span {
+        color: #f8fafc !important;
+        -webkit-text-fill-color: #f8fafc !important;
+    }
+    .stSlider [data-baseweb="input"] {
+        border-color: rgba(56, 189, 248, 0.28) !important;
     }
     .stSlider [data-baseweb="slider"] [role="slider"] {
         background-color: #38bdf8 !important;
@@ -546,19 +569,6 @@ models = load_models()
 countries = sorted(data["Country Name"].dropna().unique())
 
 results_tab, predict_tab, explore_tab = st.tabs(["Results", "Predict", "Explore"])
-
-with st.sidebar:
-    st.header("Predict Controls")
-    selected_country = st.selectbox("Country", countries, key="predict_country")
-    selected_year = st.slider("Year", min_value=2001, max_value=2022, value=2022, key="predict_year")
-    selected_model_name = st.selectbox("Model", list(MODEL_FILES.keys()), key="predict_model")
-
-selected_row = get_row_for_selection(data, selected_country, selected_year)
-current_selection = (selected_country, selected_year)
-if st.session_state.get("predict_last_selection") != current_selection:
-    defaults = get_feature_defaults(selected_row, feature_columns, feature_means)
-    sync_feature_state(defaults)
-    st.session_state["predict_last_selection"] = current_selection
 
 with results_tab:
     st.markdown(
@@ -609,13 +619,45 @@ with results_tab:
         st.markdown("</div>", unsafe_allow_html=True)
 
 with predict_tab:
+    if "predict_country" not in st.session_state:
+        st.session_state["predict_country"] = countries[0]
+    if "predict_year" not in st.session_state:
+        st.session_state["predict_year"] = 2022
+    if "predict_model" not in st.session_state:
+        st.session_state["predict_model"] = list(MODEL_FILES.keys())[0]
+
+    st.markdown('<div class="mini-label">Predict Controls</div>', unsafe_allow_html=True)
+    control_col1, control_col2, control_col3 = st.columns(3, gap="large")
+    with control_col1:
+        st.selectbox("Country", countries, key="predict_country")
+    with control_col2:
+        st.markdown('<div class="slider-label-row"><span>Year</span></div>', unsafe_allow_html=True)
+        st.slider(
+            "Year",
+            min_value=2001,
+            max_value=2022,
+            key="predict_year",
+            label_visibility="collapsed",
+        )
+    with control_col3:
+        st.selectbox("Model", list(MODEL_FILES.keys()), key="predict_model")
+
+    selected_country = st.session_state["predict_country"]
+    selected_year = st.session_state["predict_year"]
+    selected_model_name = st.session_state["predict_model"]
+    selected_row = get_row_for_selection(data, selected_country, selected_year)
+    current_selection = (selected_country, selected_year)
+    if st.session_state.get("predict_last_selection") != current_selection:
+        defaults = get_feature_defaults(selected_row, feature_columns, feature_means)
+        sync_feature_state(defaults)
+        st.session_state["predict_last_selection"] = current_selection
+
     model = models[selected_model_name]
     ordered_features = get_model_feature_order(selected_model_name, model, feature_columns)
 
     left_col, center_col, right_col = st.columns([1.05, 1.2, 0.95], gap="large")
 
     with left_col:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown('<div class="mini-label">Selected Profile</div>', unsafe_allow_html=True)
         st.subheader(f"{selected_country} • {selected_year}")
         if selected_row is None:
@@ -623,11 +665,9 @@ with predict_tab:
         else:
             st.metric("Actual CO2 per capita", f"{float(selected_row['carbon_emissions']):.2f} t")
         st.caption("Feature sliders are ordered by the selected model's importance ranking.")
-        st.markdown("</div>", unsafe_allow_html=True)
 
     feature_values = {}
     with center_col:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown('<div class="mini-label">Feature Inputs</div>', unsafe_allow_html=True)
         for feature in ordered_features:
             bounds = feature_ranges[feature]
@@ -640,7 +680,6 @@ with predict_tab:
                 value=clamped_value,
                 key=f"feature::{feature}",
             )
-        st.markdown("</div>", unsafe_allow_html=True)
 
     prediction = predict_value(model, feature_values, feature_columns)
     actual_value = None if selected_row is None else float(selected_row["carbon_emissions"])
@@ -648,7 +687,6 @@ with predict_tab:
     badge_class, badge_text = prediction_badge(prediction)
 
     with right_col:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown('<div class="mini-label">Prediction</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="prediction-value">{prediction:.2f} t</div>', unsafe_allow_html=True)
         st.markdown(
@@ -666,13 +704,22 @@ with predict_tab:
             build_distribution_chart(data, prediction, selected_country),
             use_container_width=True,
         )
-        st.markdown("</div>", unsafe_allow_html=True)
 
 with explore_tab:
-    st.markdown('<div class="card">', unsafe_allow_html=True)
     explore_controls = st.columns([0.18, 0.18, 0.64], gap="large")
     with explore_controls[0]:
-        map_year = st.slider("Explore Year", min_value=2001, max_value=2022, value=2022, key="map_year")
+        st.markdown(
+            '<div class="slider-label-row"><span>Explore Year </span></div>',
+            unsafe_allow_html=True,
+        )
+        map_year = st.slider(
+            "Explore Year",
+            min_value=2001,
+            max_value=2022,
+            value=2022,
+            key="map_year",
+            label_visibility="collapsed",
+        )
     with explore_controls[1]:
         map_model_name = st.selectbox("Explore Model", list(MODEL_FILES.keys()), key="map_model")
 
@@ -693,4 +740,3 @@ with explore_tab:
                 "Delta": st.column_config.NumberColumn(format="%.3f"),
             },
         )
-    st.markdown("</div>", unsafe_allow_html=True)

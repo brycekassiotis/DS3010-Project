@@ -24,7 +24,7 @@ MODEL_FILES = {
 
 MODEL_R2_RANKING = {
     "Gradient Boosting": 0.947,
-    "LightGBM": 0.943,
+    "LightGBM": 0.957,
     "XGBoost": 0.943,
     "Random Forest": 0.890,
     "Ridge": 0.874,
@@ -34,7 +34,9 @@ BEST_MODEL_METRICS = {
     "name": "LightGBM",
     "r2": 0.957,
     "mae": 0.540,
+    "mae_model": "LightGBM",
     "rmse": 0.869,
+    "rmse_model": "LightGBM",
 }
 
 GBR_IMPORTANCES = {
@@ -42,7 +44,7 @@ GBR_IMPORTANCES = {
     "Electricity production from natural gas sources (% of total)": 0.162049,
     "Energy imports, net (% of energy use)": 0.072315,
     "Industry (including construction), value added (% of GDP)": 0.043000,
-    "Renewable energy consumption (% of total final energy consumption)": 0.034027,
+    "Renewable energy consumption (% of total energy consumption)": 0.034027,
     "Agriculture, forestry, and fishing, value added (% of GDP)": 0.028007,
     "Electricity production from hydroelectric sources (% of total)": 0.016335,
     "Urban population (% of total population)": 0.015159,
@@ -50,6 +52,8 @@ GBR_IMPORTANCES = {
     "Electricity production from nuclear sources (% of total)": 0.008225,
     "Fossil fuel energy consumption (% of total)": 0.007593,
 }
+
+PAGE_ORDER = ["Results", "Predict", "Explore"]
 
 
 def clean_feature_names(columns):
@@ -165,6 +169,29 @@ def prediction_badge(prediction):
     return "badge-red", "High"
 
 
+def set_active_page(page_name):
+    st.session_state["active_page"] = page_name
+
+
+def reset_predict_features(data, country, year, feature_columns, feature_means):
+    selected_row = get_row_for_selection(data, country, year)
+    defaults = get_feature_defaults(selected_row, feature_columns, feature_means)
+    sync_feature_state(defaults)
+
+
+def get_page_transition_class(active_page):
+    previous_page = st.session_state.get("last_rendered_page")
+    if previous_page is None or previous_page == active_page:
+        return "page-shell"
+
+    previous_index = PAGE_ORDER.index(previous_page) if previous_page in PAGE_ORDER else 0
+    active_index = PAGE_ORDER.index(active_page) if active_page in PAGE_ORDER else 0
+
+    if active_index > previous_index:
+        return "page-shell page-slide-left"
+    return "page-shell page-slide-right"
+
+
 def build_distribution_chart(data, prediction, country_name):
     global_min = float(data["carbon_emissions"].min())
     global_max = float(data["carbon_emissions"].max())
@@ -194,8 +221,8 @@ def build_distribution_chart(data, prediction, country_name):
     )
     fig.update_layout(
         title="Prediction Within Global CO2 Distribution",
-        paper_bgcolor="#0b1220",
-        plot_bgcolor="#0b1220",
+        paper_bgcolor="rgba(15, 23, 42, 0.82)",
+        plot_bgcolor="rgba(15, 23, 42, 0.82)",
         font=dict(color="#e2e8f0"),
         xaxis=dict(title="CO2 per capita (t)", range=[global_min, global_max], zeroline=False),
         yaxis=dict(visible=False),
@@ -227,17 +254,23 @@ def build_model_ranking_chart():
             ),
             text=[f"{value:.3f}" for value in ranking_df["Test R2"]],
             textposition="outside",
+            cliponaxis=False,
         )
     )
     fig.update_layout(
         title="Model Ranking by Test R²",
-        paper_bgcolor="#0b1220",
-        plot_bgcolor="#0b1220",
+        paper_bgcolor="rgba(15, 23, 42, 0.82)",
+        plot_bgcolor="rgba(15, 23, 42, 0.82)",
         font=dict(color="#e2e8f0"),
-        xaxis=dict(title="Test R²", range=[0.82, 0.97]),
+        xaxis=dict(
+            title=dict(text="<b>Test R²</b>", standoff=20),
+            range=[0.82, 0.97],
+            tickfont=dict(size=13, family="Arial Black"),
+            automargin=True,
+        ),
         yaxis_title="",
-        height=340,
-        margin=dict(l=10, r=30, t=55, b=10),
+        height=460,
+        margin=dict(l=10, r=45, t=55, b=28),
     )
     return fig
 
@@ -261,17 +294,23 @@ def build_gbr_importance_chart():
             marker_color="#38bdf8",
             text=[f"{value:.3f}" for value in importance_df["Importance"]],
             textposition="outside",
+            cliponaxis=False,
         )
     )
     fig.update_layout(
         title="Gradient Boosting Feature Importance",
-        paper_bgcolor="#0b1220",
-        plot_bgcolor="#0b1220",
+        paper_bgcolor="rgba(15, 23, 42, 0.82)",
+        plot_bgcolor="rgba(15, 23, 42, 0.82)",
         font=dict(color="#e2e8f0"),
-        xaxis_title="Importance",
+        xaxis=dict(
+            title=dict(text="<b>Importance</b>", standoff=20),
+            range=[0, 0.68],
+            tickfont=dict(size=13, family="Arial Black"),
+            automargin=True,
+        ),
         yaxis_title="",
         height=460,
-        margin=dict(l=10, r=30, t=55, b=10),
+        margin=dict(l=10, r=70, t=55, b=28),
     )
     return fig
 
@@ -333,6 +372,7 @@ def build_choropleth(table_df, year, model_name):
             locationmode="country names",
             z=table_df["Predicted CO2 per capita"],
             text=table_df["Country"],
+            customdata=table_df[["Actual CO2 per capita", "Delta"]].to_numpy(),
             colorscale=[
                 [0.0, "#0f172a"],
                 [0.25, "#0f3d5e"],
@@ -342,7 +382,13 @@ def build_choropleth(table_df, year, model_name):
             ],
             marker_line_color="#0b1220",
             colorbar=dict(title="Predicted t"),
-            hovertemplate="%{text}<br>Predicted: %{z:.2f} t<extra></extra>",
+            hovertemplate=(
+                "%{text}<br>"
+                "Predicted: %{z:.2f} t<br>"
+                "Actual: %{customdata[0]:.2f} t<br>"
+                "Delta: %{customdata[1]:+.2f} t"
+                "<extra></extra>"
+            ),
         )
     )
     fig.update_layout(
@@ -372,7 +418,7 @@ st.markdown(
         color: #f8fafc;
     }
     .block-container {
-        padding-top: 1.1rem;
+        padding-top: 2.6rem;
         padding-bottom: 2rem;
         padding-left: 2rem;
         padding-right: 2rem;
@@ -380,17 +426,17 @@ st.markdown(
     }
     [data-testid="stHeader"] {
         background: rgba(0, 0, 0, 0);
+        pointer-events: none;
     }
-    .card {
-        background: rgba(10, 15, 29, 0.86);
-        border: 1px solid rgba(148, 163, 184, 0.12);
-        border-radius: 22px;
-        padding: 1.4rem 1.3rem;
-        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.24);
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    [data-testid="stStatusWidget"],
+    #MainMenu {
+        display: none !important;
     }
     .hero {
         text-align: center;
-        padding: 4.8rem 1rem 2.6rem 1rem;
+        padding: 0.35rem 1rem 2rem 1rem;
     }
     .hero h1 {
         font-size: 4rem;
@@ -410,12 +456,102 @@ st.markdown(
         background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.28), transparent);
         margin: 2rem 0 2.2rem 0;
     }
+    .page-shell {
+        position: relative;
+    }
+    .page-slide-left {
+        animation: pageSlideLeft 360ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .page-slide-right {
+        animation: pageSlideRight 360ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes pageSlideLeft {
+        0% {
+            opacity: 0;
+            transform: translate3d(28px, 0, 0);
+            filter: blur(8px);
+        }
+        100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+            filter: blur(0);
+        }
+    }
+    @keyframes pageSlideRight {
+        0% {
+            opacity: 0;
+            transform: translate3d(-28px, 0, 0);
+            filter: blur(8px);
+        }
+        100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+            filter: blur(0);
+        }
+    }
+    .hero,
+    .metric-card,
+    div[data-testid="stPlotlyChart"],
+    div[data-testid="stMetric"],
+    div[data-testid="stDataFrame"],
+    div[data-testid="stSelectbox"],
+    div[data-testid="stSlider"],
+    div[data-testid="column"] .stButton,
+    div[data-testid="stAlert"],
+    div[data-testid="stCaptionContainer"],
+    div[data-testid="stSubheader"] {
+        animation: componentFadeIn 420ms ease-out both;
+    }
+    .hero {
+        animation-delay: 40ms;
+    }
+    .metric-card:nth-of-type(1),
+    div[data-testid="column"]:nth-of-type(1) div[data-testid="stPlotlyChart"],
+    div[data-testid="column"]:nth-of-type(1) div[data-testid="stSelectbox"],
+    div[data-testid="column"]:nth-of-type(1) div[data-testid="stSlider"] {
+        animation-delay: 90ms;
+    }
+    .metric-card:nth-of-type(2),
+    div[data-testid="column"]:nth-of-type(2) div[data-testid="stPlotlyChart"],
+    div[data-testid="column"]:nth-of-type(2) div[data-testid="stSelectbox"],
+    div[data-testid="column"]:nth-of-type(2) div[data-testid="stSlider"] {
+        animation-delay: 150ms;
+    }
+    .metric-card:nth-of-type(3),
+    div[data-testid="column"]:nth-of-type(3) div[data-testid="stPlotlyChart"],
+    div[data-testid="column"]:nth-of-type(3) div[data-testid="stSelectbox"],
+    div[data-testid="column"]:nth-of-type(3) div[data-testid="stSlider"] {
+        animation-delay: 210ms;
+    }
+    div[data-testid="stDataFrame"],
+    div[data-testid="stAlert"],
+    div[data-testid="stCaptionContainer"],
+    div[data-testid="stSubheader"] {
+        animation-delay: 220ms;
+    }
+    @keyframes componentFadeIn {
+        0% {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
     .metric-card {
         background: rgba(15, 23, 42, 0.82);
         border: 1px solid rgba(148, 163, 184, 0.12);
         border-radius: 20px;
         padding: 1.25rem 1rem;
         min-height: 120px;
+    }
+    div[data-testid="stPlotlyChart"] {
+        background: rgba(15, 23, 42, 0.82);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        border-radius: 20px;
+        padding: 0.75rem 0.75rem 0.35rem 0.75rem;
+        overflow: hidden;
     }
     .metric-label {
         color: #94a3b8;
@@ -483,42 +619,23 @@ st.markdown(
         font-weight: 700;
         margin-bottom: 0.25rem;
     }
-    .predict-controls-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 1rem;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 1rem;
-        margin-top: 0.1rem;
-        margin-bottom: 0.8rem;
-        align-items: flex-start;
-        padding-top: 0.2rem;
-        padding-bottom: 0.5rem;
-        overflow: visible;
-    }
-    .stTabs [data-baseweb="tab"] {
-        background: rgba(15, 23, 42, 0.68);
+    .stButton > button {
+        min-height: 3rem;
         border-radius: 999px;
-        padding: 0.55rem 1.1rem;
-        border: 1px solid rgba(148, 163, 184, 0.10);
-        margin-top: -0.1rem;
-        color: #cbd5e1 !important;
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        font-weight: 700;
+        transition: all 0.18s ease;
     }
-    .stTabs [aria-selected="true"] {
-        background: rgba(56, 189, 248, 0.14);
-        border-color: rgba(56, 189, 248, 0.30);
-        box-shadow: 0 8px 24px rgba(56, 189, 248, 0.12);
-        color: #7dd3fc !important;
+    .stButton > button {
+        background: rgba(15, 23, 42, 0.68);
+        color: #cbd5e1;
     }
-    .stTabs [aria-selected="true"] p {
-        color: #7dd3fc !important;
+    .stButton > button:hover {
+        border-color: rgba(56, 189, 248, 0.26);
+        color: #f8fafc;
     }
-    .stTabs [data-baseweb="tab-highlight"] {
-        background: #38bdf8 !important;
-        height: 3px !important;
-        bottom: -0.15rem !important;
-        border-radius: 999px !important;
+    div[data-testid="column"] .stButton {
+        margin-top: 0.2rem;
     }
     .stSlider label,
     .stSlider p,
@@ -568,9 +685,41 @@ data, feature_columns, feature_means, feature_ranges = load_data()
 models = load_models()
 countries = sorted(data["Country Name"].dropna().unique())
 
-results_tab, predict_tab, explore_tab = st.tabs(["Results", "Predict", "Explore"])
+if "active_page" not in st.session_state:
+    st.session_state["active_page"] = "Results"
 
-with results_tab:
+nav_cols = st.columns(3, gap="small")
+for label, col in zip(["Results", "Predict", "Explore"], nav_cols):
+    with col:
+        st.button(
+            label,
+            key=f"page_nav_{label.lower()}",
+            use_container_width=True,
+            on_click=set_active_page,
+            args=(label,),
+        )
+
+active_nav_key = f"page_nav_{st.session_state['active_page'].lower()}"
+st.markdown(
+    f"""
+    <style>
+    .st-key-{active_nav_key} button {{
+        background: rgba(56, 189, 248, 0.16) !important;
+        color: #7dd3fc !important;
+        border-color: rgba(56, 189, 248, 0.34) !important;
+        box-shadow: 0 8px 24px rgba(56, 189, 248, 0.12);
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+active_page = st.session_state["active_page"]
+transition_class = get_page_transition_class(active_page)
+
+st.markdown(f'<div class="{transition_class}">', unsafe_allow_html=True)
+
+if active_page == "Results":
     st.markdown(
         """
         <div class="hero">
@@ -587,8 +736,8 @@ with results_tab:
     metric_cols = st.columns(3, gap="large")
     metric_content = [
         ("Best Model Test R²", f"{BEST_MODEL_METRICS['r2']:.3f}", BEST_MODEL_METRICS["name"]),
-        ("Best Model MAE", f"{BEST_MODEL_METRICS['mae']:.3f}", "tons per capita"),
-        ("Best Model RMSE", f"{BEST_MODEL_METRICS['rmse']:.3f}", "tons per capita"),
+        ("Best Model MAE", f"{BEST_MODEL_METRICS['mae']:.3f}", BEST_MODEL_METRICS["mae_model"]),
+        ("Best Model RMSE", f"{BEST_MODEL_METRICS['rmse']:.3f}", BEST_MODEL_METRICS["rmse_model"]),
     ]
 
     for col, (label, value, note) in zip(metric_cols, metric_content):
@@ -609,20 +758,24 @@ with results_tab:
     hero_left, hero_right = st.columns([1.05, 1.2], gap="large")
 
     with hero_left:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.plotly_chart(build_model_ranking_chart(), use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.plotly_chart(
+            build_model_ranking_chart(),
+            use_container_width=True,
+            config={"displayModeBar": False},
+        )
 
     with hero_right:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.plotly_chart(build_gbr_importance_chart(), use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.plotly_chart(
+            build_gbr_importance_chart(),
+            use_container_width=True,
+            config={"displayModeBar": False},
+        )
 
-with predict_tab:
+elif active_page == "Predict":
     if "predict_country" not in st.session_state:
-        st.session_state["predict_country"] = countries[0]
+        st.session_state["predict_country"] = "United States"
     if "predict_year" not in st.session_state:
-        st.session_state["predict_year"] = 2022
+        st.session_state["predict_year"] = 2021
     if "predict_model" not in st.session_state:
         st.session_state["predict_model"] = list(MODEL_FILES.keys())[0]
 
@@ -635,7 +788,7 @@ with predict_tab:
         st.slider(
             "Year",
             min_value=2001,
-            max_value=2022,
+            max_value=2021,
             key="predict_year",
             label_visibility="collapsed",
         )
@@ -651,6 +804,16 @@ with predict_tab:
         defaults = get_feature_defaults(selected_row, feature_columns, feature_means)
         sync_feature_state(defaults)
         st.session_state["predict_last_selection"] = current_selection
+
+    reset_col, _ = st.columns([0.24, 0.76], gap="large")
+    with reset_col:
+        st.button(
+            "Reset to original values",
+            key="predict_reset_features",
+            use_container_width=True,
+            on_click=reset_predict_features,
+            args=(data, selected_country, selected_year, feature_columns, feature_means),
+        )
 
     model = models[selected_model_name]
     ordered_features = get_model_feature_order(selected_model_name, model, feature_columns)
@@ -700,23 +863,19 @@ with predict_tab:
                 f'<div class="subtle">Delta from actual: {delta_value:+.2f} t</div>',
                 unsafe_allow_html=True,
             )
-        st.plotly_chart(
-            build_distribution_chart(data, prediction, selected_country),
-            use_container_width=True,
-        )
 
-with explore_tab:
+elif active_page == "Explore":
     explore_controls = st.columns([0.18, 0.18, 0.64], gap="large")
     with explore_controls[0]:
         st.markdown(
-            '<div class="slider-label-row"><span>Explore Year </span></div>',
+            '<div class="slider-label-row"><span>Explore Year</span></div>',
             unsafe_allow_html=True,
         )
         map_year = st.slider(
             "Explore Year",
             min_value=2001,
-            max_value=2022,
-            value=2022,
+            max_value=2021,
+            value=2021,
             key="map_year",
             label_visibility="collapsed",
         )
@@ -740,3 +899,6 @@ with explore_tab:
                 "Delta": st.column_config.NumberColumn(format="%.3f"),
             },
         )
+
+st.markdown("</div>", unsafe_allow_html=True)
+st.session_state["last_rendered_page"] = active_page

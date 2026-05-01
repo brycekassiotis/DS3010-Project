@@ -1,15 +1,19 @@
 import pickle
+from pathlib import Path
 import lightgbm as lgb
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import RidgeCV
 import xgboost as xgb
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = BASE_DIR.parent
+DATA_DIR = PROJECT_DIR / "data"
 
 # Load splits
-X_train = pd.read_csv('X_train.csv').drop(columns=['Country Name', 'Year'])
-y_train = pd.read_csv('y_train.csv').squeeze()
+X_train = pd.read_csv(DATA_DIR / 'X_train.csv').drop(columns=['Country Name', 'Year'])
+y_train = pd.read_csv(DATA_DIR / 'y_train.csv').squeeze()
 
 # Train and save each model
 models = {
@@ -25,16 +29,16 @@ for name, model in models.items():
     X = X_train.copy()
     X.columns = X.columns.str.replace(r'[^\w\s]', '_', regex=True)
     model.fit(X, y_train)
-    with open(f'{name}.pkl', 'wb') as f:
+    with (BASE_DIR / f'{name}.pkl').open('wb') as f:
         pickle.dump(model, f)
     print(f'Saved {name}.pkl')
 
 from sklearn.metrics import r2_score
 
-X_val = pd.read_csv('X_val.csv').drop(columns=['Country Name', 'Year'])
-y_val = pd.read_csv('y_val.csv').squeeze()
-X_test = pd.read_csv('X_test.csv').drop(columns=['Country Name', 'Year'])
-y_test = pd.read_csv('y_test.csv').squeeze()
+X_val = pd.read_csv(DATA_DIR / 'X_val.csv').drop(columns=['Country Name', 'Year'])
+y_val = pd.read_csv(DATA_DIR / 'y_val.csv').squeeze()
+X_test = pd.read_csv(DATA_DIR / 'X_test.csv').drop(columns=['Country Name', 'Year'])
+y_test = pd.read_csv(DATA_DIR / 'y_test.csv').squeeze()
 
 for name, model in models.items():
     X = X_train.copy()
@@ -52,6 +56,6 @@ for name, model in models.items():
     
     print(f"{name:15s}  train_r2={train_r2:.4f}  val_r2={val_r2:.4f}  test_r2={test_r2:.4f}")
     
-    with open(f'{name}.pkl', 'wb') as f:
+    with (BASE_DIR / f'{name}.pkl').open('wb') as f:
         pickle.dump(model, f)
     print(f"Saved {name}.pkl")

@@ -13,13 +13,17 @@ st.set_page_config(
     layout="wide",
 )
 
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
+MODEL_DIR = BASE_DIR / "model_results"
+
 
 MODEL_FILES = {
-    "LightGBM": "lgbm_model.pkl",
-    "XGBoost": "xgb_model.pkl",
-    "Gradient Boosting": "gbr_model.pkl",
-    "Random Forest": "rf_model.pkl",
-    "Ridge": "ridge_model.pkl",
+    "LightGBM": MODEL_DIR / "lgbm_model.pkl",
+    "XGBoost": MODEL_DIR / "xgb_model.pkl",
+    "Gradient Boosting": MODEL_DIR / "gbr_model.pkl",
+    "Random Forest": MODEL_DIR / "rf_model.pkl",
+    "Ridge": MODEL_DIR / "ridge_model.pkl",
 }
 
 MODEL_R2_RANKING = {
@@ -62,13 +66,13 @@ def clean_feature_names(columns):
 
 @st.cache_data
 def load_feature_columns():
-    train_df = pd.read_csv("X_train.csv")
+    train_df = pd.read_csv(DATA_DIR / "X_train.csv")
     return train_df.drop(columns=["Country Name", "Year"]).columns.tolist()
 
 
 @st.cache_data
 def load_data():
-    data = pd.read_csv("pre_split.csv")
+    data = pd.read_csv(DATA_DIR / "pre_split.csv")
     feature_columns = load_feature_columns()
     feature_means = data[feature_columns].mean(numeric_only=True)
     feature_ranges = {}
@@ -887,7 +891,7 @@ elif active_page == "Explore":
 
     st.plotly_chart(build_choropleth(table_df, map_year, map_model_name), use_container_width=True)
     if table_df.empty:
-        st.info("No rows are available for this year in `pre_split.csv`.")
+        st.info("No rows are available for this year in `data/pre_split.csv`.")
     else:
         st.dataframe(
             table_df,

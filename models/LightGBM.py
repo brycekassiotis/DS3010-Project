@@ -1,16 +1,19 @@
 import lightgbm as lgb
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import pandas as pd
+from pathlib import Path
 import plotly.express as px
 import plotly.graph_objects as go
 
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+
 # load each split
-X_train = pd.read_csv('X_train.csv')
-y_train = pd.read_csv('y_train.csv')
-X_val = pd.read_csv('X_val.csv')
-y_val = pd.read_csv('y_val.csv')
-X_test = pd.read_csv('X_test.csv')
-y_test = pd.read_csv('y_test.csv')
+X_train = pd.read_csv(DATA_DIR / 'X_train.csv')
+y_train = pd.read_csv(DATA_DIR / 'y_train.csv')
+X_val = pd.read_csv(DATA_DIR / 'X_val.csv')
+y_val = pd.read_csv(DATA_DIR / 'y_val.csv')
+X_test = pd.read_csv(DATA_DIR / 'X_test.csv')
+y_test = pd.read_csv(DATA_DIR / 'y_test.csv')
 
 # drop non-numeric columns (Country Name, Year)
 X_train = X_train.drop(columns=['Country Name', 'Year'])

@@ -1,9 +1,13 @@
 import pandas as pd
 import numpy as np
+from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
-data = pd.read_csv('updated_data.csv')
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
+
+data = pd.read_csv(DATA_DIR / 'updated_data.csv')
 print(data['Series Name'].unique())
 
 # Identify the year columns (they start with a 4-digit year)
@@ -54,7 +58,7 @@ print(data_cleaned.head())
 print(data_cleaned.shape)
 
 # save full cleaned dataset for later reference
-data_cleaned.to_csv('pre_split.csv', index=False)
+data_cleaned.to_csv(DATA_DIR / 'pre_split.csv', index=False)
 
 # Split by country so no country appears in more than one split
 countries = data_cleaned['Country Name'].unique()
@@ -77,9 +81,9 @@ print(f"Val:   {len(val_countries)} countries, {len(val_data)} rows")
 print(f"Test:  {len(test_countries)} countries, {len(test_data)} rows")
 
 # Save all splits
-X_train.to_csv('X_train.csv', index=False)
-X_val.to_csv('X_val.csv', index=False)
-X_test.to_csv('X_test.csv', index=False)
-y_train.to_csv('y_train.csv', index=False)
-y_val.to_csv('y_val.csv', index=False)
-y_test.to_csv('y_test.csv', index=False)
+X_train.to_csv(DATA_DIR / 'X_train.csv', index=False)
+X_val.to_csv(DATA_DIR / 'X_val.csv', index=False)
+X_test.to_csv(DATA_DIR / 'X_test.csv', index=False)
+y_train.to_csv(DATA_DIR / 'y_train.csv', index=False)
+y_val.to_csv(DATA_DIR / 'y_val.csv', index=False)
+y_test.to_csv(DATA_DIR / 'y_test.csv', index=False)

@@ -2,16 +2,19 @@ import xgboost as xgb
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 import pandas as pd
+from pathlib import Path
 import plotly.express as px
 import plotly.graph_objects as go
 
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+
 # Load splits
-X_train = pd.read_csv('X_train.csv')
-X_val = pd.read_csv('X_val.csv')
-X_test = pd.read_csv('X_test.csv')
-y_train = pd.read_csv('y_train.csv').squeeze()
-y_val = pd.read_csv('y_val.csv').squeeze()
-y_test = pd.read_csv('y_test.csv').squeeze()
+X_train = pd.read_csv(DATA_DIR / 'X_train.csv')
+X_val = pd.read_csv(DATA_DIR / 'X_val.csv')
+X_test = pd.read_csv(DATA_DIR / 'X_test.csv')
+y_train = pd.read_csv(DATA_DIR / 'y_train.csv').squeeze()
+y_val = pd.read_csv(DATA_DIR / 'y_val.csv').squeeze()
+y_test = pd.read_csv(DATA_DIR / 'y_test.csv').squeeze()
 
 # Drop non-numeric columns
 X_train = X_train.drop(columns=['Country Name', 'Year'])

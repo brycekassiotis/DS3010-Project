@@ -23,19 +23,19 @@ MODEL_FILES = {
 }
 
 MODEL_R2_RANKING = {
-    "Gradient Boosting": 0.947,
-    "LightGBM": 0.957,
-    "XGBoost": 0.943,
-    "Random Forest": 0.890,
-    "Ridge": 0.874,
+    "Gradient Boosting": 0.9479,
+    "LightGBM": 0.9565,
+    "XGBoost": 0.9398,
+    "Random Forest": 0.8888,
+    "Ridge": 0.7294,
 }
 
 BEST_MODEL_METRICS = {
     "name": "LightGBM",
-    "r2": 0.957,
-    "mae": 0.540,
+    "r2": 0.9565,
+    "mae": 0.5396,
     "mae_model": "LightGBM",
-    "rmse": 0.869,
+    "rmse": 0.8690,
     "rmse_model": "LightGBM",
 }
 

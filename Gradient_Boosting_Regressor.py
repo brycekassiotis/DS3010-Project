@@ -2,6 +2,8 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 
 # Load splits
 X_train = pd.read_csv('X_train.csv')
@@ -56,6 +58,44 @@ print("\n=== Test Performance ===")
 print(f"RMSE: {np.sqrt(mean_squared_error(y_test, y_test_pred)):.4f}")
 print(f"MAE:  {mean_absolute_error(y_test, y_test_pred):.4f}")
 print(f"R²:   {r2_score(y_test, y_test_pred):.4f}")
+
+# Actual vs predicted plot for the test set
+plot_df = pd.DataFrame({
+    'Actual': y_test,
+    'Predicted': y_test_pred
+})
+
+min_value = min(plot_df['Actual'].min(), plot_df['Predicted'].min())
+max_value = max(plot_df['Actual'].max(), plot_df['Predicted'].max())
+
+fig = px.scatter(
+    plot_df,
+    x='Actual',
+    y='Predicted',
+    title='Gradient Boosting Regressor: Actual vs Predicted',
+    labels={'Actual': 'Actual Values', 'Predicted': 'Predicted Values'},
+    color_discrete_sequence=['red']
+)
+fig.update_layout(
+    plot_bgcolor='white',
+    paper_bgcolor='white',
+    width=800,
+    height=800,
+    font=dict(size=18),
+    title_font=dict(size=24)
+)
+fig.update_xaxes(showgrid=False, title_font=dict(size=20), tickfont=dict(size=16))
+fig.update_yaxes(showgrid=False, title_font=dict(size=20), tickfont=dict(size=16))
+fig.add_trace(
+    go.Scatter(
+        x=[min_value, max_value],
+        y=[min_value, max_value],
+        mode='lines',
+        name='Perfect Prediction',
+        line=dict(color='black', dash='dash')
+    )
+)
+fig.show()
 
 # Feature importance
 importance_df = pd.DataFrame({

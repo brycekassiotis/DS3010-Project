@@ -572,6 +572,7 @@ st.markdown(
         color: #64748b;
         font-size: 0.88rem;
         margin-top: 0.3rem;
+        white-space: pre-line;
     }
     .prediction-value {
         text-align: center;
@@ -740,8 +741,8 @@ if active_page == "Results":
     metric_cols = st.columns(3, gap="large")
     metric_content = [
         ("Best Model Test R²", f"{BEST_MODEL_METRICS['r2']:.3f}", BEST_MODEL_METRICS["name"]),
-        ("Best Model MAE", f"{BEST_MODEL_METRICS['mae']:.3f}", BEST_MODEL_METRICS["mae_model"]),
-        ("Best Model RMSE", f"{BEST_MODEL_METRICS['rmse']:.3f}", BEST_MODEL_METRICS["rmse_model"]),
+        ("Best Model MAE", f"{BEST_MODEL_METRICS['mae']:.3f}", f"CO2 tons per capita\n{BEST_MODEL_METRICS['mae_model']}"),
+        ("Best Model RMSE", f"{BEST_MODEL_METRICS['rmse']:.3f}", f"CO2 tons per capita\n{BEST_MODEL_METRICS['rmse_model']}"),
     ]
 
     for col, (label, value, note) in zip(metric_cols, metric_content):
